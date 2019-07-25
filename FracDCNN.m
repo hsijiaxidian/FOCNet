@@ -1,9 +1,5 @@
 function net = FracDCNN()
 
-% by Kai Zhang (1/2018)
-% cskaizhang@gmail.com
-% https://github.com/cszn
-
 % Create DAGNN object
 net = dagnn.DagNN();
 
