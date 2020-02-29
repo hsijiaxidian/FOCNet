@@ -1,4 +1,9 @@
 function net = FracDCNN()
+
+% by Kai Zhang (1/2018)
+% cskaizhang@gmail.com
+% https://github.com/cszn
+
 % Create DAGNN object
 net = dagnn.DagNN();
 
@@ -9,35 +14,41 @@ stride = [1,1];
 lr     = [1,0];
 
 %% start
+% Initialize x,y,z,s
 % original scale
 [net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,1,128], [1,1], stride, [1,1]);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar_x1, blockNum] = addReLU(net, blockNum, inVar); % initialize x1
 
 % down 1-mid  1/2 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_x1);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar_y1, blockNum] = addReLU(net, blockNum, inVar); % initialize y1
 
 % down 1-bottom 1/4 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_y1);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar_z1, blockNum] = addReLU(net, blockNum, inVar); % initialize z1
 
 % down 1-bottom 1/8 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_z1);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar_s1, blockNum] = addReLU(net, blockNum, inVar); % initialize s1
 
 % up 1-mid 1/4 scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_s1, [2,2,128,128],2, lr);%upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_z1, inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_z2, blockNum] = addPLM(net,blockNum,{inVar_z1, inVar});% --------- z1->z2;
@@ -45,7 +56,8 @@ lr     = [1,0];
 % up 1-top 1/2 scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_z2, [2,2,128,128],2, lr);%upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_y1, inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_y2, blockNum] = addPLM(net,blockNum,{inVar_y1, inVar});% --------- y1->y2
@@ -53,7 +65,8 @@ lr     = [1,0];
 % up 1-top original scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_y2, [2,2,128,128],2, lr);%upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_x1, inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_x2, blockNum] = addPLM(net,blockNum,{inVar_x1, inVar});% --------- x1->x2
@@ -61,7 +74,8 @@ lr     = [1,0];
 % down 2-mid 1/2 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_x2);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_y2,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_y3, blockNum] = addPLM(net,blockNum,{inVar_y1,inVar_y2,inVar});% ------ y1->y2->y3
@@ -69,7 +83,8 @@ lr     = [1,0];
 % down 2-bottom 1/4 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_y3);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_z2,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_z3, blockNum] = addPLM(net,blockNum,{inVar_z1, inVar_z2,inVar});% ------ z1->z2->z3
@@ -77,7 +92,8 @@ lr     = [1,0];
 % down 2-bottom 1/8 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_z3);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_s1, inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_s2, blockNum] = addPLM(net,blockNum,{inVar_s1, inVar}); % -------- s1->s2
@@ -85,7 +101,8 @@ lr     = [1,0];
 % up 2-mid 1/4 scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_s2, [2,2,128,128], 2, lr);% upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_z3, inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_z4, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3, inVar});% ----- z1->z2->z3->z4
@@ -93,7 +110,8 @@ lr     = [1,0];
 % up 2-mid 1/2 scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_z4, [2,2,128,128], 2, lr);% upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_y3, inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_y4, blockNum] = addPLM(net,blockNum,{inVar_y1,inVar_y2, inVar_y3, inVar});%  ------ y1->y2->y3->y4
@@ -101,7 +119,8 @@ lr     = [1,0];
 % up 2-top scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_y4, [2,2,128,128], 2, lr);% upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_x2,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_x3, blockNum] = addPLM(net,blockNum,{inVar_x1,inVar_x2,inVar}); % ------ x1->x2->x3
@@ -109,7 +128,8 @@ lr     = [1,0];
 % down 3-mid 1/2 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_x3);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_y4,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_y5, blockNum] = addPLM(net,blockNum,{inVar_y1,inVar_y2, inVar_y3, inVar_y4,inVar});% y1--->y5
@@ -117,31 +137,35 @@ lr     = [1,0];
 % down 3-bottom 1/4 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_y5);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_z3,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
-[net, inVar_z5, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3,inVar_z4,inVar});% z1---->z5
+[net, inVar_z4, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3,inVar});% z1---->z4
 
 % down 3-bottom 1/8 scale
-[net, inVar, blockNum] = addPooling(net, blockNum, inVar_z5);
+[net, inVar, blockNum] = addPooling(net, blockNum, inVar_z4);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_s2,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_s3, blockNum] = addPLM(net,blockNum,{inVar_s1,inVar_s2,inVar});% s1--->s3
 
 % up 3-bottom 1/4 scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_s3, [2,2,128,128], 2,lr);%upsampling
-[net, inVar, blockNum] = addGate(net,blockNum,{inVar_z5,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addGate(net,blockNum,{inVar_z4,inVar},lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
-[net, inVar_z6, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3,inVar_z4,inVar_z5,inVar});% z1--->z5
+[net, inVar_z5, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3,inVar_z4,inVar});% z1--->z5
 
 % up 3-mid 1/2 scale
-[net, inVar, blockNum] = addConvt(net, blockNum, inVar_z6, [2,2,128,128],2,lr);%upsampling
+[net, inVar, blockNum] = addConvt(net, blockNum, inVar_z5, [2,2,128,128],2,lr);%upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_y5, inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_y6, blockNum] = addPLM(net,blockNum,{inVar_y1,inVar_y2,inVar_y3, inVar_y4, inVar_y5, inVar});% y1--->y6
@@ -149,7 +173,8 @@ lr     = [1,0];
 % up 3-top scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_y6, [2,2,128,128],2,lr);%upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_x3,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_x4, blockNum] = addPLM(net,blockNum,{inVar_x1,inVar_x2,inVar_x3,inVar}); % x1--->x4
@@ -157,7 +182,8 @@ lr     = [1,0];
 % down to 4-mid 1/2 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_x4);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_y6,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_y7, blockNum] = addPLM(net,blockNum,{inVar_y1,inVar_y2,inVar_y3, inVar_y4,inVar_y5,inVar_y6,inVar});% y1--->y7
@@ -165,31 +191,35 @@ lr     = [1,0];
 % down 4-bottom 1/4 scale
 [net, inVar, blockNum] = addPooling(net, blockNum, inVar_y7);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_z5,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
-[net, inVar_z7, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3, inVar_z4,inVar_z5,inVar_z6,inVar});% z1--->z6
+[net, inVar_z6, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3, inVar_z4,inVar_z5,inVar});% z1--->z6
 
 % down 4-bottom 1/8 scale
-[net, inVar, blockNum] = addPooling(net, blockNum, inVar_z7);
+[net, inVar, blockNum] = addPooling(net, blockNum, inVar_z6);
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_s3,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_s4, blockNum] = addPLM(net,blockNum,{inVar_s1,inVar_s2,inVar_s3,inVar});% s1--->s4
 
 % up 4-bottom 1/4 scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_s4, [2,2,128,128], 2,lr);%upsampling
-[net, inVar, blockNum] = addGate(net,blockNum,{inVar_z7,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addGate(net,blockNum,{inVar_z6,inVar},lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
-[net, inVar_z8, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3,inVar_z4,inVar_z5,inVar_z6,inVar_z7,inVar});% z1--->z7
+[net, inVar_z7, blockNum] = addPLM(net,blockNum,{inVar_z1,inVar_z2, inVar_z3,inVar_z4,inVar_z5,inVar_z6,inVar});% z1--->z7
 
 % up 4-mid 1/2 scale
-[net, inVar, blockNum] = addConvt(net, blockNum, inVar_z8, [2,2,128,128],2,lr);%upsampling
+[net, inVar, blockNum] = addConvt(net, blockNum, inVar_z7, [2,2,128,128],2,lr);%upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_y7,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);  % Conv
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);  % Conv
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar_y8, blockNum] = addPLM(net,blockNum,{inVar_y1,inVar_y2,inVar_y3,inVar_y4,inVar_y5,inVar_y6,inVar_y7,inVar});% y1--->y8
@@ -197,12 +227,14 @@ lr     = [1,0];
 % up 4-top scale
 [net, inVar, blockNum] = addConvt(net, blockNum, inVar_y8, [2,2,128,128],2,lr);%upsampling
 [net, inVar, blockNum] = addGate(net,blockNum,{inVar_x4,inVar},lr);
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar, blockNum] = addPLM(net,blockNum,{inVar_x1,inVar_x2,inVar_x3, inVar_x4,inVar});% x1--->x5
 
-[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,128], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,64], [1,1], stride, lr);
+[net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,64,128], [0,0], stride, lr);
 [net, inVar, blockNum] = addBnorm(net, blockNum, inVar, 128);
 [net, inVar, blockNum] = addReLU(net, blockNum, inVar);
 [net, inVar, blockNum] = addConv(net, blockNum, inVar, [3,3,128,1], [1,1], stride, lr);
@@ -210,6 +242,7 @@ lr     = [1,0];
 % sum
 inVar = {'input',inVar};
 [net, inVar, blockNum] = addSum(net,blockNum,inVar);
+% [net, inVar, blockNum] = addConv(net, blockNum, inVar, [1,1,2,1],[0,0],stride,lr);
 outputName = 'prediction';
 net.renameVar(inVar,outputName)
 
@@ -219,6 +252,9 @@ net.vars(net.getVarIndex('prediction')).precious = 1;
 
 
 end
+
+
+
 
 % Add a Concat layer
 function [net, inVar, blockNum] = addConcat(net, blockNum, inVar)
